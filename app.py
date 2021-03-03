@@ -1,4 +1,4 @@
-import os,json,requests,eyed3,readline
+import os,json,requests,eyed3,readline,re
 URL_MUSICTOEDIT ='./../../Music/musicDontEdited/'
 def recognize(musica):
     f = open('./'+musica,'rb')
@@ -35,11 +35,20 @@ def rlinput(prompt, prefill=''):
       return input(prompt)  # or raw_input in Python 2
   finally:
       readline.set_startup_hook()
-def editMusic(musica):
+def editMusic(musica, mask):
+    title = ''
+    artist = ''
+    try:
+      if mask != "":
+        result = re.findall(mask,musica)
+        print(result)
+        artist,title = result[0]
+    except:
+      print("mascara inválida")
     audiofile = eyed3.load(URL_MUSICTOEDIT+musica)
-    audiofile.tag.artist = input("Artist:")
+    audiofile.tag.artist = rlinput("Artist:",artist)
     audiofile.tag.album = input("Album:")
-    audiofile.tag.title = input("Title:")
+    audiofile.tag.title = rlinput("Title:",title)
     audiofile.tag.save()
     os.rename(URL_MUSICTOEDIT+musica,URL_MUSICTOEDIT+'../'+audiofile.tag.title+'.mp3')
 if __name__ == "__main__":
@@ -67,14 +76,13 @@ if __name__ == "__main__":
                     #recognize(m)
         elif op == 2:
             url = input('Link da playlist:')
-            itens = list(map(str,input('Itens da playlist(num1 num2 num3 ...)').split()))
-            os.system('bash ytd-2.sh '+url+' '+','.join(itens))
+            os.system('bash ytd-2.sh '+url)
             #musicas = os.listdir('./')
             #for m in musicas:
                 #if m.endswith('.mp3'):
                     #recognize(m)
         elif op == 3:
-            mask = input("Informe uma mascara para uso se quiser:")
+            mask = rlinput("Informe uma mascara para uso se quiser(apague se nao quiser usa-la):","([\w\s]+) - ([\w\s]+)")
             
             while True:
                 musicas = os.listdir(URL_MUSICTOEDIT)
@@ -82,11 +90,9 @@ if __name__ == "__main__":
                     print(str(j)+'-'+m)
                 opm = int(input("Musica desejada para editar(ou valor fora do range para voltar ao menu):"))
                 if opm<len(musicas) and opm>=0:
-                    editMusic(musicas[opm])
+                    editMusic(musicas[opm], mask)
                 else:
                     print("Voltando ao menu....")
-                    break
-                if len(mmusicas)==0:
                     break
                 #if m.endswith('.mp3'):
                     #recognize(m)
